@@ -70,13 +70,9 @@ public class ShareController {
         String subPath = URLDecoder.decode(uri.substring(uri.indexOf(prefix) + prefix.length()), StandardCharsets.UTF_8);
 
         if (!p.getIsPublic()) {
-            // 只保护 HTML 入口，子资源（css/js/img）直接放行
-            // 安全性由入口 HTML 的 viewToken 保证，没有 HTML 无法使用子资源
             boolean isHtml = subPath.endsWith(".html") || subPath.endsWith(".htm");
-            if (isHtml) {
-                if (viewToken == null || !jwtUtil.isViewToken(viewToken, slug)) {
-                    return ResponseEntity.status(403).build();
-                }
+            if (isHtml && (viewToken == null || !jwtUtil.isViewToken(viewToken, slug))) {
+                return ResponseEntity.status(403).build();
             }
         }
 
@@ -91,17 +87,20 @@ public class ShareController {
         }
 
         // 对私密项目注入 viewToken
-        if (!p.getIsPublic() && viewToken != null) {
+        if (!p.getIsPublic() && (viewToken != null || subPath.endsWith("axplayer.js") || subPath.endsWith("doc.js"))) {
             if (subPath.endsWith(".html") || subPath.endsWith(".htm")) {
                 String html = readHtml(target);
                 String injection = "<script>(function(){" +
-                    "var vt='" + viewToken + "';" +
-                    "function addVt(u){if(!u||u.indexOf('viewToken')>=0||u.startsWith('http')||u.startsWith('//')||u.startsWith('data:')||u.startsWith('#')||u==='about:blank')return u;" +
+                    "var vt='" + viewToken + "'||new URLSearchParams(location.search).get('viewToken');" +
+                    "if(!vt)return;" +
+                    "function addVt(u){if(!u||u.indexOf('viewToken')>=0||/^(https?:|\\/\\/|data:|#|about:)/.test(u))return u;" +
                     "return u+(u.indexOf('?')>=0?'&':'?')+'viewToken='+vt;}" +
                     "var _open=XMLHttpRequest.prototype.open;" +
                     "XMLHttpRequest.prototype.open=function(m,u){return _open.apply(this,[m,addVt(u)].concat([].slice.call(arguments,2)));};" +
                     "var _fetch=window.fetch;" +
                     "window.fetch=function(u,o){return _fetch.call(this,typeof u==='string'?addVt(u):u,o);};" +
+                    "try{var ld=Object.getOwnPropertyDescriptor(Location.prototype,'href');" +
+                    "Object.defineProperty(location,'href',{set:function(u){ld.set.call(this,addVt(u));},get:function(){return ld.get.call(this);}});}catch(e){}" +
                     "try{var sd=Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype,'src');" +
                     "Object.defineProperty(HTMLIFrameElement.prototype,'src',{set:function(u){sd.set.call(this,addVt(u));},get:function(){return sd.get.call(this);}});}catch(e){}" +
                     "window.__addVt=addVt;" +
@@ -113,16 +112,36 @@ public class ShareController {
             }
             // 对 axplayer.js 注入：替换所有 mainFrame.contentWindow.location.href 赋值
             if (subPath.endsWith("axplayer.js")) {
+                if (viewToken == null) viewToken = jwtUtil.generateViewToken(slug);
+                final String vt = viewToken;
                 String js = readHtml(target);
                 js = js.replace(
                     "mainFrame.contentWindow.location.href = linkUrlWithVars;",
-                    "mainFrame.contentWindow.location.href = (window.__addVt ? window.__addVt(linkUrlWithVars) : linkUrlWithVars);"
+                    "mainFrame.contentWindow.location.href = linkUrlWithVars+(linkUrlWithVars.indexOf('?')>=0?'&':'?')+'viewToken=" + vt + "';"
                 ).replace(
                     "mainFrame.contentWindow.location.href = urlToLoad;",
-                    "mainFrame.contentWindow.location.href = (window.__addVt ? window.__addVt(urlToLoad) : urlToLoad);"
+                    "mainFrame.contentWindow.location.href = urlToLoad+(urlToLoad&&urlToLoad!='about:blank'?(urlToLoad.indexOf('?')>=0?'&':'?')+'viewToken=" + vt + "':'');"
                 ).replace(
                     "mainFrame.contentWindow.location.href = urlWithVars;",
-                    "mainFrame.contentWindow.location.href = (window.__addVt ? window.__addVt(urlWithVars) : urlWithVars);"
+                    "mainFrame.contentWindow.location.href = urlWithVars+(urlWithVars.indexOf('?')>=0?'&':'?')+'viewToken=" + vt + "';"
+                );
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType("application/javascript; charset=utf-8"))
+                        .body(js);
+            }
+            if (subPath.endsWith("doc.js")) {
+                if (viewToken == null) viewToken = jwtUtil.generateViewToken(slug);
+                final String vt = viewToken;
+                String js = readHtml(target);
+                js = js.replace(
+                    "targetLocation.href = targetUrl || 'about:blank';",
+                    "targetLocation.href = (targetUrl&&targetUrl!='about:blank'?(targetUrl+(targetUrl.indexOf('?')>=0?'&':'?')+'viewToken=" + vt + "'):'about:blank');"
+                ).replace(
+                    "targetLocation.href = $axure.utils.getReloadPath() + \"?\" + encodeURI(targetUrl);",
+                    "targetLocation.href = $axure.utils.getReloadPath() + \"?\" + encodeURI(targetUrl) + '&viewToken=" + vt + "';"
+                ).replace(
+                    "window.location.href = targetUrl;",
+                    "window.location.href = targetUrl+(targetUrl.indexOf('?')>=0?'&':'?')+'viewToken=" + vt + "';"
                 );
                 return ResponseEntity.ok()
                         .contentType(MediaType.parseMediaType("application/javascript; charset=utf-8"))

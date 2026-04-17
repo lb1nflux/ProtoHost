@@ -15,10 +15,10 @@
     <p v-if="project.description" class="text-sm text-muted-foreground line-clamp-2 mb-3">{{ project.description }}</p>
     <p class="text-xs text-muted-foreground mb-4">更新于 {{ formatDate(project.updatedAt) }}</p>
     <div class="flex gap-2">
-      <router-link :to="`/view/${project.shareSlug}`"
+      <a :href="`/view/${project.shareSlug}`" target="_blank"
         class="flex-1 text-center text-sm border border-border rounded-md py-1.5 hover:bg-secondary flex items-center justify-center gap-1">
         <ExternalLinkIcon class="h-3 w-3" />查看
-      </router-link>
+      </a>
       <button @click="copyLink" class="border border-border rounded-md p-1.5 hover:bg-secondary">
         <CopyIcon class="h-3.5 w-3.5" />
       </button>

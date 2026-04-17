@@ -1,54 +1,61 @@
 # ProtoHost
 
-A prototype hosting platform. Upload ZIP files containing HTML prototypes and share them via public or password-protected links.
+原型托管平台。上传包含 HTML 原型的 ZIP 文件，通过公开或密码保护的链接分享。
 
-## Tech Stack
+## 技术栈
 
-- **Backend**: Spring Boot 3.2.5 + MyBatis-Plus + MySQL 8
-- **Frontend**: Vue 3 + Vite + Tailwind CSS
-- **Auth**: JWT
+- **后端**：Spring Boot 3.2.5 + MyBatis-Plus + MySQL 8
+- **前端**：Vue 3 + Vite + Tailwind CSS
+- **认证**：JWT
 
-## Requirements
+## 环境要求
 
-- Java 17+
-- Node.js 18+
-- MySQL 8.x
-- Maven 3.x
+- Docker & Docker Compose
 
-## Setup
+## Docker 部署
 
-### 1. Database
+```bash
+cp .env.example .env
+# 编辑 .env，填写 MYSQL_ROOT_PASSWORD 和 JWT_SECRET
+docker compose up -d
+```
+
+服务启动后访问 `http://localhost`。
+
+## 手动开发环境
+
+### 1. 数据库
 
 ```sql
 CREATE DATABASE protohost CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-Then run `backend/src/main/resources/schema.sql` to create tables.
+然后执行 `backend/src/main/resources/schema.sql` 创建表结构。
 
-### 2. Backend Configuration
+### 2. 后端配置
 
 ```bash
 cp backend/src/main/resources/application.yml.example \
    backend/src/main/resources/application.yml
 ```
 
-Edit `application.yml` and fill in:
+编辑 `application.yml`，填写以下配置：
 
-| Key | Description |
-|-----|-------------|
-| `spring.datasource.username` | MySQL username |
-| `spring.datasource.password` | MySQL password |
-| `app.jwt.secret` | Base64 secret key — generate with `openssl rand -base64 32` |
-| `app.upload.base-path` | Directory for uploaded files (default: `./uploads`) |
+| 配置项 | 说明 |
+|--------|------|
+| `spring.datasource.username` | MySQL 用户名 |
+| `spring.datasource.password` | MySQL 密码 |
+| `app.jwt.secret` | Base64 密钥，可用 `openssl rand -base64 32` 生成 |
+| `app.upload.base-path` | 上传文件目录（默认：`./uploads`） |
 
-### 3. Start Backend
+### 3. 启动后端
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-### 4. Start Frontend
+### 4. 启动前端
 
 ```bash
 cd frontend
@@ -56,11 +63,11 @@ npm install
 npm run dev
 ```
 
-Frontend runs at `http://localhost:5173`, proxies API calls to `http://localhost:8080`.
+前端运行在 `http://localhost:5173`，API 请求代理到 `http://localhost:8080`。
 
-## Features
+## 功能
 
-- Register / Login with JWT authentication
-- Upload ZIP prototypes (UTF-8 and GBK filename support)
-- Public or password-protected sharing via slug URL
-- Prototype preview in iframe with asset proxying
+- 注册 / 登录（JWT 认证）
+- 上传 ZIP 原型（支持 UTF-8 和 GBK 文件名）
+- 通过 slug URL 公开或密码保护分享
+- iframe 预览原型，支持资源代理

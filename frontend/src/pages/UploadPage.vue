@@ -20,7 +20,7 @@
           <!-- Drop zone -->
           <div @dragenter.prevent="drag=true" @dragleave.prevent="drag=false"
             @dragover.prevent @drop.prevent="onDrop"
-            @click="$refs.fileInput.click()"
+            @click="($refs.fileInput as HTMLInputElement).click()"
             :class="drag ? 'border-primary bg-primary/5' : file ? 'border-accent bg-accent/5' : 'border-border hover:border-muted-foreground'"
             class="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors">
             <input ref="fileInput" type="file" accept=".zip" class="hidden" @change="onFileSelect" />

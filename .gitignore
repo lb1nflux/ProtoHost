@@ -16,6 +16,9 @@ frontend/.env
 .vscode/
 *.iml
 
+# Env
+.env
+
 # OS
 .DS_Store
 Thumbs.db
