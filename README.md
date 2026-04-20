@@ -1,52 +1,269 @@
 # ProtoHost
 
-原型托管平台。上传包含 HTML 原型的 ZIP 文件，通过公开或密码保护的链接分享。
+轻量的 HTML 原型托管与分享平台。
+
+ProtoHost 面向 Axure 等工具导出的 ZIP 静态原型，提供上传托管、项目管理、版本留存和受控分享能力，帮助团队更方便地发布、查看和流转原型。
+
+## 适用场景
+
+- 产品、设计团队集中托管 Axure / HTML 原型
+- 向客户、业务方或测试同学分发可访问的预览链接
+- 为同一原型维护多个发布版本
+- 对私密原型增加密码访问控制
+
+## 为什么使用 ProtoHost
+
+- 开箱即用：上传 ZIP 后即可在线预览
+- 便于管理：支持项目分组、版本记录与历史下载
+- 易于分享：支持公开链接和密码访问
+- 面向团队：降低原型分发、回收与复查成本
+
+## 快速开始
+
+- 想快速体验：查看 [Docker Compose](#docker-compose)
+- 想参与开发：查看 [本地开发](#本地开发)
+- 想了解能力边界：继续阅读功能说明、接口与数据结构
+
+## 核心特性
+
+- 上传 ZIP 原型包并在线托管
+- 支持项目分组与筛选
+- 支持项目版本管理与历史包下载
+- 支持公开链接与密码访问
+- 支持在线预览与浏览次数统计
+- 提供注册、登录、邮箱验证码与找回密码能力
 
 ## 技术栈
 
-- **后端**：Spring Boot 3.2.5 + MyBatis-Plus + MySQL 8
-- **前端**：Vue 3 + Vite + Tailwind CSS
-- **认证**：JWT
+### 后端
 
-## 环境要求
+- Java 17
+- Spring Boot 3.2.5
+- Spring Security
+- MyBatis-Plus
+- MySQL 8
+- JWT
+- Spring Mail
+- Caffeine
 
-- Docker & Docker Compose
+### 前端
 
-## Docker 部署
+- Vue 3
+- Vite 5
+- TypeScript
+- Vue Router
+- Pinia
+- Tailwind CSS
+- Axios
+- lucide-vue-next
 
-```bash
-cp .env.example .env
-# 编辑 .env，填写 MYSQL_ROOT_PASSWORD 和 JWT_SECRET
-docker compose up -d
+### 部署
+
+- Docker Compose
+- Nginx（前端镜像内静态托管）
+
+## 项目结构
+
+```text
+protohost-github/
+├─ backend/                        # Spring Boot 后端
+│  ├─ src/main/java/com/protohost/
+│  │  ├─ controller/               # 认证、项目、分组、分享接口
+│  │  ├─ service/                  # 业务服务
+│  │  ├─ mapper/                   # MyBatis-Plus Mapper
+│  │  ├─ entity/                   # 数据实体
+│  │  ├─ dto/                      # 请求/响应对象
+│  │  ├─ security/                 # JWT 认证过滤器
+│  │  └─ util/                     # JWT、ZIP 处理等工具
+│  └─ src/main/resources/
+│     ├─ schema.sql                # 数据库初始化脚本
+│     └─ application.yml.example   # 本地配置示例
+├─ frontend/                       # Vue 3 前端
+│  ├─ src/api/                     # 接口请求封装
+│  ├─ src/components/              # UI 组件
+│  ├─ src/pages/                   # 页面
+│  ├─ src/router/                  # 路由
+│  ├─ src/stores/                  # Pinia 状态管理
+│  └─ src/types/                   # 类型定义
+├─ docker-compose.yml              # 一键启动 MySQL / backend / frontend
+└─ README.md
 ```
 
-服务启动后访问 `http://localhost`。
+## 功能说明
 
-## 手动开发环境
+### 1. 原型上传与托管
 
-### 1. 数据库
+登录用户可以上传 ZIP 文件创建项目，并设置：
+
+- 项目名称
+- 版本号
+- 描述
+- 所属分组
+- 公开或私密访问
+- 私密项目访问密码
+
+上传后的 ZIP 会被解压并以静态资源形式提供访问，适合直接托管 Axure 导出的 HTML 原型包。
+
+### 2. 项目与分组管理
+
+系统支持：
+
+- 查看当前用户的全部项目
+- 按分组筛选项目
+- 新建、编辑、删除项目分组
+- 调整项目所属分组
+- 修改项目访问设置
+- 删除项目
+
+### 3. 版本管理
+
+每个项目支持维护多个版本记录，包含：
+
+- 版本号
+- 更新说明
+- 文件存储路径
+- 文件大小
+- 创建时间
+
+用户可以查看历史版本，并下载指定版本文件。
+
+### 4. 分享与访问控制
+
+项目分享分为两种模式：
+
+- 公开访问：可直接打开分享链接
+- 私密访问：输入访问密码后获取浏览令牌
+
+对于私密项目，系统通过 `viewToken` 控制 HTML 入口页访问，并在部分场景下注入到内部资源请求中，尽量保证原型内嵌页面与脚本跳转能够正常访问。
+
+## 主要页面
+
+前端当前包含以下核心页面：
+
+- `/login`：登录
+- `/register`：注册
+- `/forgot-password`：找回密码
+- `/`：项目首页 / 控制台
+- `/upload`：上传原型
+- `/view/:slug`：分享预览页
+
+## 接口概览
+
+### 认证接口
+
+- `POST /api/auth/send-register-code`
+- `POST /api/auth/send-reset-code`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/reset-password`
+
+### 分组接口
+
+- `GET /api/groups`
+- `POST /api/groups`
+- `PUT /api/groups/{id}`
+- `DELETE /api/groups/{id}`
+- `PUT /api/groups/sort`
+
+### 项目接口
+
+- `GET /api/projects`
+- `POST /api/projects/upload`
+- `DELETE /api/projects/{id}`
+- `PUT /api/projects/{id}/group`
+- `PUT /api/projects/{id}/settings`
+- `GET /api/projects/{id}/versions`
+- `GET /api/projects/versions/{versionId}/download`
+
+### 分享接口
+
+- `GET /api/share/{slug}/meta`
+- `POST /api/share/{slug}/verify`
+- `GET /api/share/{slug}/files/**`
+
+## 数据结构
+
+当前初始化脚本包含以下核心表：
+
+- `users`：用户
+- `project_groups`：项目分组
+- `projects`：项目
+- `project_versions`：项目版本
+
+其中：
+
+- `projects.share_slug` 用于生成外部访问链接
+- `projects.entry_file` 表示原型入口文件，默认 `index.html`
+- `projects.storage_path` 与 `project_versions.storage_path` 用于定位上传文件存储目录
+
+## Docker Compose
+
+适合快速体验或本地完整联调。
+
+### 1. 准备环境变量
+
+复制 `.env.example` 为 `.env`，并至少配置：
+
+- `MYSQL_ROOT_PASSWORD`
+- `JWT_SECRET`
+
+如果需要邮箱验证码功能，还需要配置：
+
+- `MAIL_HOST`
+- `MAIL_PORT`
+- `MAIL_USERNAME`
+- `MAIL_PASSWORD`
+
+### 2. 启动服务
+
+```bash
+docker compose up --build
+```
+
+启动后默认包含以下服务：
+
+- `mysql`：MySQL 8
+- `backend`：Spring Boot 后端
+- `frontend`：前端静态站点
+
+前端默认通过 `http://localhost` 访问。
+
+## 本地开发
+
+### 环境要求
+
+- JDK 17+
+- Maven 3.9+
+- Node.js 18+
+- npm 9+
+- MySQL 8
+
+### 1. 初始化数据库
+
+创建数据库：
 
 ```sql
 CREATE DATABASE protohost CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-然后执行 `backend/src/main/resources/schema.sql` 创建表结构。
+执行初始化脚本：
 
-### 2. 后端配置
+- [backend/src/main/resources/schema.sql](backend/src/main/resources/schema.sql)
 
-```bash
-cp backend/src/main/resources/application.yml.example \
-   backend/src/main/resources/application.yml
-```
+### 2. 配置后端
 
-编辑 `application.yml`，填写以下配置：
+将 [backend/src/main/resources/application.yml.example](backend/src/main/resources/application.yml.example) 复制为 `backend/src/main/resources/application.yml`，并重点修改：
 
-| 配置项 | 说明 |
-|--------|------|
-| `spring.datasource.username` | MySQL 用户名 |
-| `spring.datasource.password` | MySQL 密码 |
-| `app.jwt.secret` | Base64 密钥，可用 `openssl rand -base64 32` 生成 |
-| `app.upload.base-path` | 上传文件目录（默认：`./uploads`） |
+- 数据库连接
+- JWT 密钥
+- 邮件服务器配置
+- 上传目录
+
+默认配置中：
+
+- 后端端口为 `8080`
+- 上传目录为 `./uploads`
+- 单文件上传限制为 `200MB`
 
 ### 3. 启动后端
 
@@ -63,11 +280,66 @@ npm install
 npm run dev
 ```
 
-前端运行在 `http://localhost:5173`，API 请求代理到 `http://localhost:8080`。
+前端开发服务器默认地址：
 
-## 功能
+- `http://localhost:5173`
 
-- 注册 / 登录（JWT 认证）
-- 上传 ZIP 原型（支持 UTF-8 和 GBK 文件名）
-- 通过 slug URL 公开或密码保护分享
-- iframe 预览原型，支持资源代理
+## 配置说明
+
+`application.yml` 示例中包含这些核心配置：
+
+```yml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/protohost...
+    username: root
+    password: change_me
+
+app:
+  jwt:
+    secret: replace_with_base64_secret
+    expiration: 604800
+    view-expiration: 7200
+  upload:
+    base-path: ./uploads
+```
+
+关键项说明：
+
+- `app.jwt.secret`：登录令牌与浏览令牌签名密钥
+- `app.jwt.expiration`：登录态有效期
+- `app.jwt.view-expiration`：私密原型浏览令牌有效期
+- `app.upload.base-path`：ZIP 解压后的文件存储目录
+
+## 安全说明
+
+提交代码前请注意：
+
+- 不要提交 `.env`
+- 不要提交 `backend/src/main/resources/application.yml`
+- 不要提交真实邮箱凭证、数据库密码、JWT 密钥
+- 不要将仅本地使用的上下文文件、代理配置、私有材料重新带回公开仓库
+
+## 适合的使用方式
+
+这个仓库适合：
+
+- 本地开发与调试
+- Docker 部署与演示
+- 作为 Axure / HTML 原型分享系统的基础项目进行二次开发
+
+## 可扩展方向
+
+如果继续演进，这个项目很适合扩展：
+
+- 管理员后台
+- 分享链接过期时间控制
+- CDN / 对象存储接入
+- 项目成员协作
+- 更细粒度的权限系统
+- 上传与访问审计日志
+- 在线版本对比能力
+
+## License
+
+当前仓库中未包含独立 License 文件；如果计划公开分发，建议补充明确的许可证与版权说明。

@@ -40,13 +40,24 @@
 
           <div class="grid grid-cols-2 gap-4">
             <div class="space-y-1">
+              <label class="text-sm font-medium">所属分组</label>
+              <select v-model="groupId" class="w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
+                <option :value="undefined">未分组</option>
+                <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
+              </select>
+            </div>
+            <div class="space-y-1">
               <label class="text-sm font-medium">项目名称 *</label>
               <input v-model="name" required maxlength="100" placeholder="我的原型"
                 class="w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
             </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
             <div class="space-y-1">
-              <label class="text-sm font-medium">版本号</label>
-              <input v-model="version" maxlength="20" placeholder="1.0.0"
+              <label class="text-sm font-medium">版本号 *</label>
+              <input v-model="version" required maxlength="20" placeholder="例如 1.0.0"
+
                 class="w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
             </div>
           </div>
@@ -98,10 +109,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Layers as LayersIcon, ArrowLeft as ArrowLeftIcon, Upload as UploadIcon, FileArchive as FileArchiveIcon } from 'lucide-vue-next'
 import { projectApi } from '@/api/project'
+import { groupApi } from '@/api/group'
+import type { ProjectGroup } from '@/types'
 
 const router = useRouter()
 const file = ref<File | null>(null)
@@ -110,10 +123,19 @@ const version = ref('1.0.0')
 const description = ref('')
 const isPublic = ref(true)
 const accessPassword = ref('')
+const groupId = ref<number | undefined>(undefined)
+const groups = ref<ProjectGroup[]>([])
 const uploading = ref(false)
 const progress = ref(0)
 const drag = ref(false)
 const error = ref('')
+
+async function fetchGroups() {
+  const { data } = await groupApi.list()
+  groups.value = data
+}
+
+onMounted(fetchGroups)
 
 function onDrop(e: DragEvent) {
   drag.value = false
@@ -141,6 +163,7 @@ async function submit() {
     if (description.value.trim()) form.append('description', description.value.trim())
     form.append('isPublic', String(isPublic.value))
     if (!isPublic.value && accessPassword.value) form.append('accessPassword', accessPassword.value)
+    if (groupId.value) form.append('groupId', String(groupId.value))
     progress.value = 30
     await projectApi.upload(form)
     progress.value = 100

@@ -36,11 +36,17 @@ public class ShareController {
     @GetMapping("/{slug}/meta")
     public ResponseEntity<Map<String, Object>> meta(@PathVariable String slug) {
         Project p = findBySlug(slug);
+        
+        // Increment view count
+        p.setViewCount(p.getViewCount() + 1);
+        projectMapper.updateById(p);
+
         return ResponseEntity.ok(Map.of(
                 "name", p.getName(),
                 "version", p.getVersion(),
                 "isPublic", p.getIsPublic(),
-                "entryFile", p.getEntryFile()
+                "entryFile", p.getEntryFile(),
+                "viewCount", p.getViewCount()
         ));
     }
 
