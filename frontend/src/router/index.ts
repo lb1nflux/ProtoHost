@@ -6,6 +6,7 @@ const router = createRouter({
   routes: [
     { path: '/login', component: () => import('@/pages/LoginPage.vue') },
     { path: '/register', component: () => import('@/pages/RegisterPage.vue') },
+    { path: '/forgot-password', component: () => import('@/pages/ForgotPasswordPage.vue') },
     { path: '/', component: () => import('@/pages/DashboardPage.vue'), meta: { auth: true } },
     { path: '/upload', component: () => import('@/pages/UploadPage.vue'), meta: { auth: true } },
     { path: '/view/:slug', component: () => import('@/pages/ViewPage.vue') },

@@ -9,7 +9,7 @@
         <p class="text-muted-foreground text-sm">原型托管，一键分享</p>
       </div>
       <div class="bg-card border border-border rounded-lg shadow-elevated p-6 space-y-4">
-        <h2 class="text-xl font-heading font-semibold text-center">{{ isLogin ? '登录' : '注册' }}</h2>
+        <h2 class="text-xl font-heading font-semibold text-center">登录</h2>
         <form @submit.prevent="submit" class="space-y-4">
           <div class="space-y-1">
             <label class="text-sm font-medium">邮箱</label>
@@ -17,20 +17,21 @@
               class="w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
           </div>
           <div class="space-y-1">
-            <label class="text-sm font-medium">密码</label>
+            <div class="flex justify-between items-center">
+              <label class="text-sm font-medium">密码</label>
+              <router-link to="/forgot-password" class="text-xs text-primary hover:underline">忘记密码？</router-link>
+            </div>
             <input v-model="password" type="password" required minlength="6" placeholder="••••••••"
               class="w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
           </div>
           <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
           <button type="submit" :disabled="loading"
             class="w-full gradient-primary text-white font-medium py-2 rounded-md text-sm disabled:opacity-60">
-            {{ loading ? '处理中...' : isLogin ? '登录' : '注册' }}
+            {{ loading ? '登录中...' : '登录' }}
           </button>
         </form>
         <p class="text-center text-sm">
-          <button @click="isLogin = !isLogin" class="text-primary hover:underline">
-            {{ isLogin ? '没有账号？注册' : '已有账号？登录' }}
-          </button>
+          <router-link to="/register" class="text-primary hover:underline">没有账号？立即注册</router-link>
         </p>
       </div>
     </div>
@@ -45,7 +46,6 @@ import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const auth = useAuthStore()
-const isLogin = ref(true)
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
@@ -55,14 +55,10 @@ async function submit() {
   error.value = ''
   loading.value = true
   try {
-    if (isLogin.value) {
-      await auth.login(email.value, password.value)
-    } else {
-      await auth.register(email.value, password.value)
-    }
+    await auth.login(email.value, password.value)
     router.push('/')
   } catch (e: any) {
-    error.value = e || '操作失败'
+    error.value = e || '登录失败'
   } finally {
     loading.value = false
   }

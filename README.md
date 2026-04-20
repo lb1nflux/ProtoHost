@@ -1,61 +1,51 @@
 # ProtoHost
 
-原型托管平台。上传包含 HTML 原型的 ZIP 文件，通过公开或密码保护的链接分享。
+ProtoHost is a full-stack application for hosting and sharing HTML prototype packages uploaded as ZIP files.
 
-## 技术栈
+## Stack
 
-- **后端**：Spring Boot 3.2.5 + MyBatis-Plus + MySQL 8
-- **前端**：Vue 3 + Vite + Tailwind CSS
-- **认证**：JWT
+- Backend: Spring Boot 3, Spring Security, MyBatis-Plus, MySQL 8
+- Frontend: Vue 3, Vite, Pinia, Tailwind CSS
+- Deployment: Docker Compose
 
-## 环境要求
+## Repository Scope
 
-- Docker & Docker Compose
+This repository keeps only the assets needed for development, build, deployment, and maintenance.
+Product drafts, design-process materials, local agent metadata, and secrets are excluded from the public repo.
 
-## Docker 部署
+## Quick Start
+
+### Docker Compose
+
+1. Copy `.env.example` to `.env`.
+2. Replace `MYSQL_ROOT_PASSWORD` and `JWT_SECRET`.
+3. Configure mail variables if you need email verification or password reset.
+4. Run:
 
 ```bash
-cp .env.example .env
-# 编辑 .env，填写 MYSQL_ROOT_PASSWORD 和 JWT_SECRET
-docker compose up -d
+docker compose up --build
 ```
 
-服务启动后访问 `http://localhost`。
+The frontend will be available at `http://localhost`.
 
-## 手动开发环境
+### Local Development
 
-### 1. 数据库
+1. Create the database:
 
 ```sql
 CREATE DATABASE protohost CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-然后执行 `backend/src/main/resources/schema.sql` 创建表结构。
-
-### 2. 后端配置
-
-```bash
-cp backend/src/main/resources/application.yml.example \
-   backend/src/main/resources/application.yml
-```
-
-编辑 `application.yml`，填写以下配置：
-
-| 配置项 | 说明 |
-|--------|------|
-| `spring.datasource.username` | MySQL 用户名 |
-| `spring.datasource.password` | MySQL 密码 |
-| `app.jwt.secret` | Base64 密钥，可用 `openssl rand -base64 32` 生成 |
-| `app.upload.base-path` | 上传文件目录（默认：`./uploads`） |
-
-### 3. 启动后端
+2. Import [`backend/src/main/resources/schema.sql`](/C:/Users/79628/Desktop/protohost-github/backend/src/main/resources/schema.sql).
+3. Copy [`backend/src/main/resources/application.yml.example`](/C:/Users/79628/Desktop/protohost-github/backend/src/main/resources/application.yml.example) to `backend/src/main/resources/application.yml` and fill in local values.
+4. Start the backend:
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-### 4. 启动前端
+5. Start the frontend:
 
 ```bash
 cd frontend
@@ -63,11 +53,18 @@ npm install
 npm run dev
 ```
 
-前端运行在 `http://localhost:5173`，API 请求代理到 `http://localhost:8080`。
+The frontend dev server runs on `http://localhost:5173`.
 
-## 功能
+## Core Features
 
-- 注册 / 登录（JWT 认证）
-- 上传 ZIP 原型（支持 UTF-8 和 GBK 文件名）
-- 通过 slug URL 公开或密码保护分享
-- iframe 预览原型，支持资源代理
+- User registration and login
+- Email verification and password reset
+- ZIP upload and hosted preview for HTML prototypes
+- Public and password-protected share links
+- Project grouping, versioning, and downloads
+
+## Push Checklist
+
+- Do not commit `.env` or `backend/src/main/resources/application.yml`.
+- Keep mail credentials and JWT secrets in local-only config or CI/CD secrets.
+- Do not restore `context/`, `.gemini/`, `GEMINI.md`, or similar workspace-only materials into the public repository.

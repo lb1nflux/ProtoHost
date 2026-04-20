@@ -1,23 +1,29 @@
-# Backend
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+backend/src/main/resources/application.yml
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# Build outputs
 backend/target/
 backend/uploads/
-backend/src/main/resources/application.yml
+frontend/node_modules/
+frontend/dist/
 *.class
 *.jar
 *.war
 
-# Frontend
-frontend/node_modules/
-frontend/dist/
-frontend/.env
+# Local workspace metadata
+.gemini/
+context/
 
 # IDE
 .idea/
 .vscode/
 *.iml
-
-# Env
-.env
 
 # OS
 .DS_Store
