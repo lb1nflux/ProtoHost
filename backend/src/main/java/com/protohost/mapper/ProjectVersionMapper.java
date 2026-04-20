@@ -1,0 +1,9 @@
+package com.protohost.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.protohost.entity.ProjectVersion;
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface ProjectVersionMapper extends BaseMapper<ProjectVersion> {
+}
